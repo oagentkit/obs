@@ -15,8 +15,6 @@ obs 迁出 obsx 后不再依赖 eino，但 go.sum 里 oekit/core（eino 传递�
 依赖内容没变（v0.9.0 的包与 API 不变），故不发新版本——已发布物不动，
 下游 go.sum 校验和不受影响。
 
-- 文档(changelog)：补 CHANGELOG.md（从 git 历史生成）
-
 ## [v0.9.0] — 2026-10-20
 
 ### 重构：obsx 迁出本仓 —— eino 耦合的观测适配层该待在重仓
@@ -31,8 +29,6 @@ Go 的依赖面按 module 结算。
 本仓剩两包：langfuse（Langfuse 追踪客户端）、audit（审计留痕）。
 关联 oagentkit/guardx#3
 
-- 文档(changelog)：补 CHANGELOG.md（从 git 历史生成）
-
 ## [v0.8.0] — 2026-10-19
 
 ### 新增(audit)：接收 guardx/audit —— 审计留痕落到本来就带 logx 的仓
@@ -45,8 +41,6 @@ guardx 是 tier 0 零依赖底层 —— 依赖面按 module 结算，那条 req
 只是 import 路径从 github.com/oagentkit/guardx/audit 变为
 github.com/oagentkit/obs/audit。
 关联 oagentkit/guardx#3
-
-- 文档(changelog)：补 CHANGELOG.md（从 git 历史生成）
 
 ## [v0.7.0] — 2026-10-19
 
