@@ -1,13 +1,12 @@
 # AGENTS.md — oagentkit/obs
 
-> LLM 可观测 + 审计留痕——eino callbacks 埋点/token 用量采集/分阶段打标/Langfuse 追踪客户端/敏感操作结构化审计
+> 观测客户端 + 审计留痕——Langfuse 追踪客户端 / 敏感操作结构化审计
 > module：`github.com/oagentkit/obs` · org：[oagentkit = Open Agent Kit](https://github.com/oagentkit)
 > 矩阵分层：**tier 1**（能力层，依赖 tier0）
 
 ## 本仓包含
 
 ```
-`obsx/`
 `langfuse/`
 `audit/`      ← 自 guardx 迁入（v0.8.0）：审计留痕，依赖 oekit/logx
 ```
