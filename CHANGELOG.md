@@ -2,6 +2,22 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.0] — 2026-10-20
+
+### 重构：obsx 迁出本仓 —— eino 耦合的观测适配层该待在重仓
+
+BREAKING CHANGE: github.com/oagentkit/obs/obsx → github.com/oagentkit/llm/obsx
+obsx 是 eino callbacks 适配层（intrinsically 绑 eino 框架）。它在本仓时，
+**langfuse 与 audit 这两个轻包被白拖 27 个第三方模块**（eino + sonic 全家）——
+Go 的依赖面按 module 结算。
+迁到 llm（本仓早已 import obsx 做成本记账与阶段打标，同一关注点）后：
+- obs 的 eino 依赖从 go.mod 消失 → langfuse / audit 只剩 logx 级别的地板
+- llm 仓的「模型调用观测」与「模型客户端」住在一起
+本仓剩两包：langfuse（Langfuse 追踪客户端）、audit（审计留痕）。
+关联 oagentkit/guardx#3
+
+- 文档(changelog)：补 CHANGELOG.md（从 git 历史生成）
+
 ## [v0.8.0] — 2026-10-19
 
 ### 新增(audit)：接收 guardx/audit —— 审计留痕落到本来就带 logx 的仓
