@@ -19,7 +19,9 @@ go get github.com/oagentkit/obs
 
 ## 外部依赖地板
 
-- `github.com/cloudwego/eino`
+- **零第三方依赖。** 只依赖 `github.com/oekit/logx`、`github.com/oekit/pkg`
+  与矩阵内的 `github.com/oagentkit/guardx`。
+  （eino 依赖已随 `obsx` 迁往 `llm` 仓而从本仓 go.mod 消失，见 CHANGELOG。）
 
 ## 与 oekit 的关系
 
