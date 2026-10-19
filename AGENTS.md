@@ -1,6 +1,6 @@
 # AGENTS.md — oagentkit/obs
 
-> LLM 可观测——eino callbacks 埋点/token 用量采集/分阶段打标/Langfuse 追踪客户端
+> LLM 可观测 + 审计留痕——eino callbacks 埋点/token 用量采集/分阶段打标/Langfuse 追踪客户端/敏感操作结构化审计
 > module：`github.com/oagentkit/obs` · org：[oagentkit = Open Agent Kit](https://github.com/oagentkit)
 > 矩阵分层：**tier 1**（能力层，依赖 tier0）
 
@@ -9,6 +9,7 @@
 ```
 `obsx/`
 `langfuse/`
+`audit/`      ← 自 guardx 迁入（v0.8.0）：审计留痕，依赖 oekit/logx
 ```
 
 ## 硬规则
@@ -16,7 +17,8 @@
 ### 分层与依赖
 
 - 依赖严格自底向上，**禁止反向依赖**。本仓是 tier 1，只允许依赖 tier ≤ 1 的仓。
-- 本仓依赖的矩阵内仓：`textx`。
+- 本仓依赖的矩阵内仓：`textx`、`guardx`（audit 用 `guardx/logredact` 打码）。
+  ⚠️ 两者都是 tier 0，本仓 tier 1 —— 依赖方向合法。
 - 改 module 路径必须同步：全部 import、go.mod、README 安装行。
 
 ### 错误处理
@@ -38,6 +40,8 @@
 
 - 日志走 `oekit/logx`，组件 logger 用 `logx.Delegating("oagentkit-obs")`。
 - **观测数据不得携带凭据原文**，落盘前过 `guardx/logredact`。
+- `audit` 包的 logger 为 nil 时回退 `logx.NewAuditLogger`（级别锁 Info、不受
+  `LOG_LEVEL` 降级、SetLevel 到 WARN/ERROR 被拒）—— 这是刻意设计，别改回普通 logger。
 
 ## 仓特有纪律
 

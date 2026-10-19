@@ -1,6 +1,6 @@
 # obs
 
-LLM 可观测——eino callbacks 埋点/token 用量采集/分阶段打标/Langfuse 追踪客户端 —— oagentkit 模块矩阵 **tier 1**（能力层，依赖 tier0）。
+LLM 可观测 + 审计留痕——eino callbacks 埋点/token 用量采集/分阶段打标/Langfuse 追踪客户端/敏感操作结构化审计 —— oagentkit 模块矩阵 **tier 1**（能力层，依赖 tier0）。
 
 ```
 go get github.com/oagentkit/obs
@@ -10,12 +10,13 @@ go get github.com/oagentkit/obs
 |---|---|
 | `obsx` | eino callbacks 体系的 LLM 调用追踪 + token 用量采集 + 分阶段打标 |
 | `langfuse` | Langfuse Public API 只读客户端（v3 self-hosted 契约面） |
+| `audit` | 敏感操作的结构化审计留痕（自 `guardx/audit` 迁入 v0.8.0）：字段值统一经 `logredact` 打码 |
 
 ## 定位
 
 **tier 1** — 能力层，依赖 tier0。
 
-- 本仓依赖的矩阵内仓：`textx`。
+- 本仓依赖的矩阵内仓：`textx`、`guardx`。
 
 ## 外部依赖地板
 
