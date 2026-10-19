@@ -2,6 +2,21 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.1] — 2026-10-20
+
+### 修复(docs)：外部依赖地板改为零第三方依赖——eino 随 obsx 迁出已不在 go.mod (#5)
+
+Co-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+
+### 修复(go.sum)：清掉移除 eino 后残留的 oekit/core 条目
+
+obs 迁出 obsx 后不再依赖 eino，但 go.sum 里 oekit/core（eino 传递进来的）
+只剩一条 /go.mod 哈希行留着。CI 的 `go mod tidy -diff` 判红。
+依赖内容没变（v0.9.0 的包与 API 不变），故不发新版本——已发布物不动，
+下游 go.sum 校验和不受影响。
+
+- 文档(changelog)：补 CHANGELOG.md（从 git 历史生成）
+
 ## [v0.9.0] — 2026-10-20
 
 ### 重构：obsx 迁出本仓 —— eino 耦合的观测适配层该待在重仓
