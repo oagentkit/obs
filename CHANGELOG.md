@@ -4,7 +4,7 @@
 
 ## [v0.9.1] — 2026-10-20
 
-### 修复(docs)：外部依赖地板改为零第三方依赖——eino 随 obsx 迁出已不在 go.mod (#5)
+### 修复(docs)：外部依赖地板改为零第三方依赖——eino 随 obsx 迁出已不在 go.mod
 
 Co-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
@@ -48,7 +48,7 @@ github.com/oagentkit/obs/audit。
 
 ## [v0.6.0] — 2026-10-19
 
-- 杂务(deps)：依赖地板对齐远端最新（textx v0.4.0 / concurrency v0.17.1 / logx v0.7.1 / pkg v0.15.1） (#13)
+- 杂务(deps)：依赖地板对齐远端最新（textx v0.4.0 / concurrency v0.17.1 / logx v0.7.1 / pkg v0.15.1）
 
 ## [v0.5.0] — 2026-10-19
 
@@ -68,9 +68,9 @@ github.com/oagentkit/obs/audit。
 与 logx 的 trace 提取器，不自建 trace。
 门禁：go build / go vet / go test -race 2 包全绿，gofmt 干净。
 
-- 杂务(deps)：依赖地板升到「历史最新 + 0.1.0」 (#3)
-- 杂务(deps)：跟进最新 tag (#2)
-- 杂务(deps)：oekit 依赖升级 (#1)
+- 杂务(deps)：依赖地板升到「历史最新 + 0.1.0」
+- 杂务(deps)：跟进最新 tag
+- 杂务(deps)：oekit 依赖升级
 - 杂务(deps)：oekit/concurrency v0.12.0 -> v0.13.1
 - 杂务(deps)：oekit 三模块升至最新（pkg v0.13.0 / concurrency v0.12.0 / logx v0.7.0）
 - 杂务(deps)：oekit/concurrency v0.6.0 -> v0.9.0
