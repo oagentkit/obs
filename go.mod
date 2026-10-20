@@ -1,12 +1,10 @@
 module github.com/oagentkit/obs
 
-go 1.26.0
-
-toolchain go1.27.2
+go 1.24.0
 
 require (
 	github.com/oekit/logx v0.7.1
-	github.com/oekit/pkg v0.15.1
+	github.com/oekit/pkg v0.16.0
 )
 
-require github.com/oagentkit/guardx v0.7.0
+require github.com/oagentkit/guardx v0.8.2
