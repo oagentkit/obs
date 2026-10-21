@@ -7,4 +7,4 @@ require (
 	github.com/oekit/pkg v0.18.0
 )
 
-require github.com/oagentkit/guardx v0.8.2
+require github.com/oagentkit/guardx v0.9.0
