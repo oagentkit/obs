@@ -2,6 +2,10 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.5] — 2026-10-21
+
+- 与 v0.9.4 相比无代码差异（版本号/打包变更）
+
 ## [v0.9.4] — 2026-10-21
 
 - 杂务(deps)：依赖地板追平上游本轮新版本——oagentkit/guardx v0.13.1 oekit/pkg v0.20.0
@@ -48,6 +52,42 @@ guardx v0.11.0 新增 sandbox/wire 跨进程调用协议，是**新增能力**�
 于是这一格欠账一直挂着。依赖地板报告器把「子仓发版让下游落后」显式化，
 但报告器恒不失败——真正的硬约束是「打 tag 时刻地板必须是当时的最新」。
 本地门禁：go mod tidy 无差异 / go build / go vet 通过。
+
+- 杂务(deps)：oagentkit/guardx 依赖地板抬到 v0.9.0
+
+guardx v0.9.0 新增了 toolfail 与 sandbox 两个 tier0 原语，
+是**新增能力**而非 API 变更——本仓无需改代码，只抬地板。
+为什么现在补：guardx v0.9.0 是 2026-10-21 发布的，本仓上一个 tag 早于它，
+于是这一格欠账一直挂着（依赖地板报告器把「子仓发版让下游落后」显式化，
+但报告器恒不失败——真正的硬约束是「打 tag 时刻地板必须是当时的最新」）。
+本地门禁：go mod tidy 无差异 / go build / go vet 通过。
+
+
+- 文档：修正陈旧的矩阵内依赖声明
+
+本仓的矩阵内依赖实际只有 `guardx`（go.mod 只 require 它，代码也只 import 它）。
+`textx` 是**陈旧声明**——`modules.json` 的 `dependsOn` 一直带着它，
+但代码里早已没有任何 textx 引用。
+现在有一条机器门禁专门对账这件事（`matrix-tools/scripts/verify_import_direction.py`：
+真实 import ⊆ 声明），它把本仓标成了「声明陈旧」。
+声明与事实不一致的代价：所有以声明图为输入的门禁（依赖闭包、层级校验）
+都在一张漂了的图上做校验；矩阵的机器可读源也对外播着一个不存在的依赖。
+本 PR 把声明与手写文档里那一行一起改对，与生成器（`gen_docs.py` 的
+`dep_line`）的输出格式保持一致。矩阵源侧的修正在
+oagentkit/matrix-tools 的对应 PR 里。
+
+- 文档(AGENTS)：补「发版顺序」小节，指向 org CONTRIBUTING 单一副本
+
+13 个业务仓的 AGENTS.md 此前对发版顺序零覆盖（只有 textx 有个
+「### 版本与发版」标题，但里面只讲 SemVer 与 module 路径），
+发版顺序只写在 org 规则仓的 .github/CONTRIBUTING.md 里，单仓读者看不到。
+本次只加**指针 + 本仓相关提醒**，runbook 本体保持**单一副本**
+（CONTRIBUTING §发版），避免 13 份副本各自漂移。
+覆盖四条：
+- CHANGELOG.md 由 matrix-tools/scripts/gen_changelogs.py 从 git 历史生成，不要手改
+- tag 必须落在 CHANGELOG 提交之后（下游 go get 拿到的是 tag 快照）
+- 警告：无参重生成会吞掉待发版段，--next-version 是唯一能产出待发版段的开关
+- 本仓相关提醒（见正文）
 
 
 ## [v0.9.3] — 2026-10-20
