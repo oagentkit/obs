@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/oekit/logx v0.7.1
-	github.com/oekit/pkg v0.20.0
+	github.com/oekit/pkg v0.21.0
 )
 
 require github.com/oagentkit/guardx v0.13.1
