@@ -2,6 +2,48 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.6] — 2026-10-22
+
+- 杂务(deps)：oekit/pkg 依赖地板抬到 v0.21.0
+
+本仓的 oekit/pkg 地板停在 v0.20.0，而基座已在 2026-10-21T19:17:42Z 发布
+v0.21.0。本仓 main 上的提交发生在基座发布之后，因此
+matrix-tools/scripts/verify_tag_floor.py --org oagentkit --repo obs --ref HEAD
+判红：下一次打 tag 会在「发版时刻就落后」——而 tag 受 protect-tags ruleset
+保护不可重打，坏 tag 会永久留在版本线上。
+为什么这次抬地板是零行为差异：
+上游 v0.20.0 -> v0.21.0 的 diff 只动了 pathx 一个包
+（新增 SanitizeFileName + 补 doc），go.mod 一字未动（go 1.24.0、无依赖）。
+本仓实际 import 的 oekit/pkg 子包只有 httpjson（langfuse/client.go），
+errors/httpjson/stringx/urlguard 均未受影响，与上游改动无交集。
+本仓自身 Go 代码零改动。
+改动面：go.mod 一行 + go.sum 两行。
+门禁：go build / go vet / go test -race / gofmt -l / go mod tidy -diff 全绿。
+
+- 杂务(ci)：去掉试点期的显式 changelog-scope——回到调用层的最小形态
+
+issue matrix-tools#76 收尾：`.github#19` 已把 go-ci.yml 的 input 默认翻成 `repo`，
+本仓的显式传参已是**冗余**（调用层只写与默认不同的差异）。
+顺带把「默认路径」在真实 CI 里验一遍：本 PR 合并后，obs 的 main 分支 run
+不再显式传参，走的正是**新默认** ⇒ 日志里的范围判定应为
+「事件 push：范围模式 repo → 只校验调用方本仓（obs）」。
+发版：无（本 PR 只改 CI 调用层，不动代码，不改 CHANGELOG）。
+
+- 杂务(ci)：试点 changelog-scope=repo——CHANGELOG 覆盖门禁在 push 事件下只查本仓
+
+issue matrix-tools#76 的第 3 步：**单仓试点**。门禁本体是全 org 单点（各仓以
+`@main` 引用，没有回退选项），所以口径变化必须先在一个仓验通，再翻默认。
+本仓（obs）显式传 `changelog-scope: repo`：
+- PR 事件口径不变（仍只查 PR 的 base 仓 + PR head）；
+- **push / 手动事件只校验本仓**的 CHANGELOG 覆盖——别的仓的欠账不再让 obs 的
+  main 变红；
+- **定时事件仍是全矩阵**（跨仓硬失败的归属地是 matrix-tools 的每日 job，
+  审计覆盖面不减）。
+验收：合并后 obs 的 **main 分支 run** 日志里范围判定应为
+「事件 push：范围模式 repo → 只校验调用方本仓（obs）」，且徽章 success。
+发版：无（本 PR 只改 CI 调用层，不动代码，不改 CHANGELOG）。
+
+
 ## [v0.9.5] — 2026-10-21
 
 - 与 v0.9.4 相比无代码差异（版本号/打包变更）
