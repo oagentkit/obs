@@ -23,9 +23,3 @@ jobs:
     uses: oagentkit/.github/.github/workflows/go-ci.yml@main
     with:
       go-version: '1.24'
-      # 试点（issue matrix-tools#76）：CHANGELOG 覆盖门禁在**非 PR 事件**
-      # （push / 手动）下**只校验本仓**，不再替别的仓的欠账背红。
-      #
-      # 跨仓硬失败的归属地仍是 matrix-tools 的**每日定时 job**（全矩阵审计），
-      # 审计覆盖面不减。本仓是**单仓试点**——全 org 翻默认前先在这里验一遍。
-      changelog-scope: repo
