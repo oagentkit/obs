@@ -2,7 +2,7 @@
 
 > 观测客户端 + 审计留痕——Langfuse 追踪客户端 / 敏感操作结构化审计
 > module：`github.com/oagentkit/obs` · org：[oagentkit = Open Agent Kit](https://github.com/oagentkit)
-> 矩阵分层：**tier 1**（能力层，依赖 tier0）
+> 矩阵分层：**tier 2**（集成层，依赖 tier0/tier1 + 重第三方地板）
 
 ## 本仓包含
 
@@ -15,9 +15,9 @@
 
 ### 分层与依赖
 
-- 依赖严格自底向上，**禁止反向依赖**。本仓是 tier 1，只允许依赖 tier ≤ 1 的仓。
+- 依赖严格自底向上，**禁止反向依赖**。本仓是 tier 2，只允许依赖 tier ≤ 2 的仓。
 - 本仓依赖的矩阵内仓：`guardx`（audit 用 `guardx/logredact` 打码）。
-  ⚠️ 两者都是 tier 0，本仓 tier 1 —— 依赖方向合法。
+  ⚠️ guardx 是 tier 0 零依赖底层，本仓 tier 2 —— 依赖方向合法。
 - 改 module 路径必须同步：全部 import、go.mod、README 安装行。
 
 ### 错误处理
