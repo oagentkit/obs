@@ -2,6 +2,40 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.7] — 2026-10-23
+
+- 杂务(deps)：依赖地板抬到 guardx v0.14.0 / oekit/pkg v0.22.0
+
+抬 go.mod 的依赖地板，跟到本轮新版本：
+- github.com/oagentkit/guardx    v0.13.1 -> v0.14.0
+- github.com/oekit/pkg           v0.21.0 -> v0.22.0
+本仓自身代码零改动，只改 go.mod / go.sum。
+下游要做什么：**go mod tidy**——地板抬高对下游是**隐式破坏性变更**：
+不跑就报 updates to go.mod needed，且报错不提真正原因。
+为什么抬：本仓 tip（237ca426，2026-10-22T02:37:47Z）的地板还钉在 guardx v0.13.1 /
+pkg v0.21.0，而 guardx 最新已是 v0.14.0（发布于 2026-10-22T09:46:52Z）、
+基座 pkg 最新已是 v0.22.0（发布于 2026-10-22T09:18:33Z）——**都比 tip 晚**。
+矩阵的「发版时刻地板时效」门禁（verify_tag_floor.py --org oagentkit，默认 HEAD 口径）
+此刻还绿，**只因 tip 的提交时刻早于这两个发布时刻**；用门禁自己的 check_ref() 复现
+（同一份 go.mod、同一批 tag，只把 ref 时刻推进到现在）即刻报红：
+guardx 地板 v0.13.1 应为 v0.14.0、pkg 地板 v0.21.0 应为 v0.22.0。
+⇒ 下一次 push 到本仓就会把这条判据打红，而下一次打 tag 就会把落后地板发出去；
+tag 受 protect-tags 保护不可重打（重打会让下游 go.sum 的 h1 对不上 ⇒ checksum mismatch）。
+为什么是本仓：全矩阵 18 条落后地板分布在 9 个仓，本仓 tip 时刻最靠近依赖发布时刻
+（guardx 差 7.2h、pkg 差 6.7h，其余 16 条 ≥ 21h）⇒ 下一次被 push 的概率最高。
+为什么无行为差异：guardx v0.13.1 -> v0.14.0 的 diff 只动 permgate/（只读档对写入类
+工具改为「禁」而不是「问」）与其测试，而本仓只 import guardx/logredact
+（audit/audit.go），实测 logredact/ 在两版之间**逐字节相同**；
+pkg v0.21.0 -> v0.22.0 的 diff 只动 pathx/（新包）与 stringx/csv.go（新增），
+而本仓只 import pkg/httpjson（langfuse/client.go），实测 httpjson/ **逐字节相同**。
+本仓 Go 代码零改动。
+版本口径：走 **patch v0.9.7**——本仓 floorBumps 登记里最近 4 次抬地板的发布全是 patch
+（v0.9.2 / v0.9.3 / v0.9.4 / v0.9.6，其中 v0.9.4 跨了 guardx 5 个 minor），
+且本次两处 bump 零行为差异、不新增任何包 ⇒ 没有门面转发面变化。
+门禁：go build / vet / test -race 通过，gofmt -l 空，go mod tidy -diff 空。
+Closes #28
+
+
 ## [v0.9.6] — 2026-10-22
 
 - 杂务(deps)：oekit/pkg 依赖地板抬到 v0.21.0
