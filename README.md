@@ -1,6 +1,6 @@
 # obs
 
-观测客户端 + 审计留痕——Langfuse 追踪客户端 / 敏感操作结构化审计 —— oagentkit 模块矩阵 **tier 1**（能力层，依赖 tier0）。
+观测客户端 + 审计留痕——Langfuse 追踪客户端 / 敏感操作结构化审计 —— oagentkit 模块矩阵 **tier 2**（集成层，依赖 tier0/tier1 + 重第三方地板）。
 
 ```
 go get github.com/oagentkit/obs
@@ -13,7 +13,7 @@ go get github.com/oagentkit/obs
 
 ## 定位
 
-**tier 1** — 能力层，依赖 tier0。
+**tier 2** — 集成层，依赖 tier0/tier1 + 重第三方地板。
 
 - 本仓依赖的矩阵内仓：`textx`、`guardx`。
 
