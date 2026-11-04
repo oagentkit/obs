@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -26,12 +27,12 @@ func TestClientFetchBatch(t *testing.T) {
 	mux := http.NewServeMux()
 	var gotAuth string
 	var gotQuery string
-	pageCalls := 0
+	var pageCalls, detailCalls atomic.Int64
 
 	mux.HandleFunc("/api/public/traces", func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
 		gotQuery = r.URL.RawQuery
-		pageCalls++
+		pageCalls.Add(1)
 		page := r.URL.Query().Get("page")
 		pageNo := 1
 		_, _ = fmt.Sscanf(page, "%d", &pageNo)
@@ -51,9 +52,9 @@ func TestClientFetchBatch(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
-	detailCalls := 0
+	// detailCalls 会被并行详情拉取并发自增（fanout.Map 收编）——必须原子
 	mux.HandleFunc("/api/public/traces/", func(w http.ResponseWriter, r *http.Request) {
-		detailCalls++
+		detailCalls.Add(1)
 		id := r.URL.Path[len("/api/public/traces/"):]
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"id": id, "timestamp": "2026-09-14T08:00:00Z", "latency": 1.5,
@@ -78,11 +79,11 @@ func TestClientFetchBatch(t *testing.T) {
 	if gotAuth != wantAuth {
 		t.Fatalf("basic auth pk:sk expected, got %q", gotAuth)
 	}
-	if pageCalls != 2 {
-		t.Fatalf("must page until exhausted, got %d list calls", pageCalls)
+	if pageCalls.Load() != 2 {
+		t.Fatalf("must page until exhausted, got %d list calls", pageCalls.Load())
 	}
-	if detailCalls != 3 {
-		t.Fatalf("each trace needs detail fetch (observations), got %d", detailCalls)
+	if detailCalls.Load() != 3 {
+		t.Fatalf("each trace needs detail fetch (observations), got %d", detailCalls.Load())
 	}
 	if len(batch.Traces) != 3 {
 		t.Fatalf("want 3 traces, got %d", len(batch.Traces))

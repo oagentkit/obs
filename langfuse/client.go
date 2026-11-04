@@ -6,6 +6,7 @@ package langfuse
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,8 +14,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oekit/concurrency/fanout"
 	"github.com/oekit/pkg/httpjson"
 )
+
+// detailFetchConcurrency 详情拉取并发上界：单条 GET 是轻请求，上界只防
+// limit 数百时对 langfuse API 的瞬时压力（翻页仍串行——页序推进带提前终止）。
+const detailFetchConcurrency = 4
 
 // Client Langfuse 只读客户端。
 type Client struct {
@@ -121,16 +127,30 @@ func (c *Client) FetchBatch(ctx context.Context, q Query) (Batch, error) {
 	}
 	var batch Batch
 	batch.TotalItems = total
-	for _, r := range rows {
-		detail, err := c.GetTrace(ctx, r.id)
-		if err != nil {
-			batch.Skipped++ // 单条详情失败：降级跳过计数，不弃整批
+	// 详情拉取收编 fanout.Map（有界并行——N+1 串行是 FetchBatch 的墙钟大头）：
+	// 结果保持 rows 序=timestamp.asc 列表序；逐条降级语义不变，失败/panic 均
+	// 计 Skipped 不弃整批。
+	details, derr := fanout.Map(ctx, rows, detailFetchConcurrency, func(ctx context.Context, r row) (Trace, error) {
+		return c.GetTrace(ctx, r.id)
+	})
+	failedIdx := map[int]bool{}
+	if derr != nil {
+		var fe *fanout.Error
+		if errors.As(derr, &fe) {
+			batch.Skipped = len(fe.Failed) // 单条详情失败：降级跳过计数，不弃整批
+			for _, f := range fe.Failed {
+				failedIdx[f.Index] = true
+			}
+		}
+	}
+	for i, d := range details {
+		if failedIdx[i] {
 			continue
 		}
-		if detail.Name == "" {
-			detail.Name = r.name
+		if d.Name == "" {
+			d.Name = rows[i].name
 		}
-		batch.Traces = append(batch.Traces, detail)
+		batch.Traces = append(batch.Traces, d)
 	}
 	return batch, nil
 }
