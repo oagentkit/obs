@@ -2,6 +2,124 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.8] — 2026-11-04
+
+### 重构(langfuse)：FetchBatch 详情 N+1 串行改 fanout.Map 有界并行
+
+单条 GET 轻请求，上界 4 防 limit 数百时的瞬时压力；顺序保持 rows 序
+（timestamp.asc 列表序），逐条降级（Skipped）语义不变；翻页仍串行——
+页序推进带提前终止。假服务端计数改原子（并行请求下 -race 即抓）。
+deps：oekit/logx v0.8.2、concurrency v0.23.3
+
+- 杂务(deps)：依赖地板追到最新——github.com/oagentkit/guardx v0.17.0
+
+guardx v0.17.0（2026-10-28 发布，含 logredact 载荷裁剪档与 invoke.Outcome 第三格）⇒ 本仓的地板落后 ⇒ 抬上来。
+矩阵的**发版时刻地板时效**门禁（`verify_tag_floor --ref HEAD`，宽口径）要求：**各仓 HEAD**
+（= 下次发版会发出去的内容）的依赖地板，相对那一刻的依赖最新版本，不能已落后。
+兼容性实测：本仓只用这些依赖的少量 API ⇒ go build / go vet / go test -race 全绿，
+**零行为差异**；go 指令未被顶起。
+只改 go.mod / go.sum ⇒ 不需要 CHANGELOG 条目（版本段由下次发版的 `prewrite` 生成）。
+
+- 杂务(deps)：依赖地板追到最新——github.com/oekit/logx v0.8.0 github.com/oekit/pkg v0.31.0
+
+oekit 基座发了新版本（pkg v0.31.0 / concurrency v0.23.0 / logx v0.8.0）⇒ 本仓的
+依赖地板落后 ⇒ 抬到最新，让**下一次发版**不再带出落后地板（打 tag 时刻的地板
+必须是当时的最新——`verify_tag_floor` / `release.py doctor` 都在查这条）。
+兼容性实测：本仓只用这些基座包的少量 API ⇒ go build / go vet / go test -race
+全绿，**零行为差异**；go 指令未被顶起（本仓的 go 地板不动）。
+
+- 杂务(deps)：依赖地板追平上游本轮新版本——github.com/oagentkit/guardx@v0.15.0、github.com/oekit/pkg@v0.28.0
+
+本仓 HEAD 的依赖地板已落后于各依赖的最新版本（`verify_tag_floor.py --org oagentkit --ref HEAD` 判红）。
+本仓一旦发版，就会把落后地板发出去——而 tag 受 protect-tags ruleset 保护、打完不能重打，
+只能靠后续版本补齐。
+本版只抬依赖地板，不改任何行为：
+- github.com/oagentkit/guardx v0.15.0 → v0.15.0
+- github.com/oekit/pkg v0.28.0 → v0.28.0
+对应 issue matrix-tools#143。
+
+
+- 文档(obs)：刷正 README.md 的依赖清单——去掉已迁出的 textx
+
+本仓 go.mod 的矩阵内**直接**依赖只有 guardx；textx 随
+019c02998009e5d3a907ae90c070e3f23a6bf347（refactor!: obsx 迁出本仓）
+一起移出。本 README 第 22 行已经记录了那次迁移（eino 耦合的观测适配层
+迁往 llm 仓），但上一行的依赖清单漏改了。
+同仓 AGENTS.md:19 的同一行本来就只列 guardx —— 此前是**同一仓的两个
+第一入口互相矛盾**（README 说依赖 textx，AGENTS.md 说只依赖 guardx）。
+清单口径 = go.mod 的「直接」矩阵内依赖（// indirect 不列）。
+关联 oagentkit/matrix-tools#127
+
+- 文档(obs)：刷正 README 的矩阵内依赖清单 —— 与 go.mod 实测对账
+
+本仓 README 的「矩阵内依赖」清单与**各仓 go.mod 的事实**对不上。
+矩阵的单一数据源 `matrix-tools/modules.json` 也有同样漂移，已在
+[matrix-tools#126](https://github.com/oagentkit/matrix-tools/pull/126) 同步刷正。
+## 现状核实
+```bash
+$ grep -rn "oagentkit/textx" obs/ --include=*.go | wc -l
+0
+$ grep -A4 "^require (" obs/go.mod
+require (
+	github.com/oekit/logx v0.7.1
+	github.com/oekit/pkg v0.22.0
+)
+require github.com/oagentkit/guardx v0.14.0
+```
+⇒ 本仓**已经不再 import `textx`**（`obsx` 迁往 `llm` 时一并切走的），
+`go.mod` 里也没有 ⇒ 清单里的 `textx` 是陈旧的。
+## 影响
+读者按 README 会以为本仓依赖 textx ⇒ 去查 textx 的 API 变化，白查一趟；真实依赖只有 guardx（且只用于 `audit` 包的 `guardx/logredact` 打码）。
+## 改动
+**只改清单那一行（`- 本仓依赖的矩阵内仓：`textx`、`guardx`。` ⇒ `- 本仓依赖的矩阵内仓：`guardx`。`）**，其余段落逐字未动。
+## 验收
+- [x] 清单与 `go.mod` 实测一致
+- [x] 与 `matrix-tools/modules.json` 的登记一致（同期在 matrix-tools#126 刷正）
+- [x] **纯 .md 改动** ⇒ 不需要 CHANGELOG 条目、不打 tag、不发版（无发版步骤）
+关联 oagentkit/matrix-tools#125
+
+- 文档(obs)：刷正 README.md 的层位声明——tier 1 → tier 2
+
+## 现状
+本仓 `README.md` 的两处层位声明写的是**层位重定位之前**的旧层位（tier 1），
+而矩阵单一数据源 `matrix-tools/modules.json` 说本仓是 **tier 2（集成层）**。
+层位重定位的依据见 matrix-tools 提交 `6d800c4`「层位 = 依赖地板」——
+tier 2 的定义是「依赖 tier0/tier1 + 重第三方地板」（`modules.json` 的 `tiers` 映射）。
+| 位置 | 改前 | 改后 |
+|---|---|---|
+| `README.md` 第 3 行（定位声明行） | `**tier 1**` | `**tier 2**` |
+| `README.md` 第 16 行（`## 定位` 自述行） | `**tier 1**` | `**tier 2**` |
+- `modules.json`：`obs` 的 `tier` = **2**，`tiers["2"]` = 集成层
+- 本仓 `AGENTS.md` 第 5 行：**已是** `> 矩阵分层：**tier 2**（集成层，依赖 tier0/tier1 + 重第三方地板）`
+  ⇒ 改之前，本仓的**两个第一入口互相矛盾**（`AGENTS.md` 说 tier 2、`README.md` 说 tier 1）
+## 影响
+`README.md` 是仓级的第一入口（人读 + agent 读）。它写 tier 1 而数据源是 tier 2 ⇒
+读者按 README 判断依赖方向就会算错，而分层是矩阵的**硬不变量**（tier N 不得依赖 tier > N）。
+## 改动
+**只改层位数字与层名，其余段落逐字不动**：
+- 第 3 行：`**tier 1**` → `**tier 2**`，层名 `（能力层，依赖 tier0）` → `（集成层，依赖 tier0/tier1 + 重第三方地板）`
+- `## 定位`：`**tier 1**` → `**tier 2**`，层名 `能力层` → `集成层`
+层名与整段括号说明对齐到 tier 2 的权威表述后，与本仓 `AGENTS.md`
+及 `llm` / `toolgate` / `tools` / `agent` 四个 tier 2 仓的 README 逐字一致。
+diff 只含层位行，`README.md` 的手写段落逐字未动。
+## 验收
+- [x] `python3 matrix-tools/scripts/verify_repo_tiers.py --root .` ⇒ 本仓 README **红 0**（本地实跑，26 处声明全一致）
+- [x] 层位数字与层名与 `modules.json` 一致，且与本仓 `AGENTS.md` 一致
+- [x] **纯 .md 改动** ⇒ 不需要 CHANGELOG 条目、不打 tag、不发版（无发版步骤）
+关联 oagentkit/matrix-tools#123
+
+- 文档(obs)：刷正 AGENTS.md 层位声明——tier 1 → tier 2
+
+AGENTS.md 的层位声明与矩阵单一数据源 modules.json 不一致。
+- 矩阵分层：**tier 1**（能力层，依赖 tier0）→ **tier 2**（集成层，依赖 tier0/tier1 + 重第三方地板）
+- 「本仓是 tier 1，只允许依赖 tier ≤ 1 的仓」→ tier 2
+- 「⚠️ 两者都是 tier 0，本仓 tier 1」→ guardx 是 tier 0，本仓 tier 2
+modules.json 里 obs 的 tier = 2（层名「集成层」；本仓带 eino 地板，obsx 是 eino
+callbacks 适配层）。层位写错会让人按 tier 1 的口径判依赖方向，而分层是矩阵的硬不变量。
+属 matrix-tools#109 的仓级层位漂移；同批修 queue / skillkit / mcpkit / rag。
+diff 只含层位行，AGENTS.md 的手写段落逐字未动。
+
+
 ## [v0.9.7] — 2026-10-23
 
 - 杂务(deps)：依赖地板抬到 guardx v0.14.0 / oekit/pkg v0.22.0
