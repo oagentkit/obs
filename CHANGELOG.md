@@ -4,6 +4,17 @@
 
 ## [v0.9.10] — 2026-11-08
 
+- 杂务(deps)：依赖地板追到最新——concurrency v0.28.2 / logx v0.8.8 / pkg v0.37.3
+
+| 依赖 | 现地板 | 抬到 |
+|---|---|---|
+| `github.com/oekit/concurrency` | `v0.28.0` | `v0.28.2` |
+| `github.com/oekit/logx` | `v0.8.6` | `v0.8.8` |
+| `github.com/oekit/pkg` | `v0.37.1` | `v0.37.3` |
+矩阵的发版时刻地板时效门禁（verify_tag_floor --ref HEAD）要求：各仓 HEAD
+的依赖地板，相对那一刻的依赖最新版本，不能已落后（matrix-tools#188 发版链）。
+兼容性实测：go build / go vet / go test -race -count=1 ./... 全绿，go mod tidy -diff 无漂移。
+
 - 杂务(deps)：依赖地板追到最新——github.com/oekit/concurrency v0.28.1
 
 | 依赖 | 现地板 | 抬到 |
