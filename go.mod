@@ -9,4 +9,4 @@ require (
 
 require github.com/oagentkit/guardx v0.23.4
 
-require github.com/oekit/concurrency v0.30.1
+require github.com/oekit/concurrency v0.31.0
