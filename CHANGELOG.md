@@ -2,6 +2,12 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.12] — 2026-11-08
+
+### 修复(audit)：redactFields 递归下探结构化字段——map/slice/struct 不再原文落盘（#57）
+
+Merge branch 'main' into fix/issue-57-structured-redact
+
 ## [v0.9.11] — 2026-11-08
 
 - 杂务(deps)：依赖地板追到最新——github.com/oekit/concurrency v0.28.4
