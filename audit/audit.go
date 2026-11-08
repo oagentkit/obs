@@ -26,7 +26,9 @@ func New(log logx.Logger, service string) *Logger {
 	return &Logger{log: log.WithService(service)}
 }
 
-// Log 记录一条审计事件（nil receiver 安全）。字符串字段值经 logredact.Redact 打码。
+// Log 记录一条审计事件（nil receiver 安全）。字段值统一经 logredact 打码：
+// 字符串过 Redact 文本规则，结构化值（map/slice/struct）递归下探（obs#57——
+// 此前只打顶层字符串，header map / 请求体里的嵌套凭据原文落盘）。
 func (l *Logger) Log(action Action, fields ...any) {
 	if l == nil || l.log == nil {
 		return
@@ -35,7 +37,10 @@ func (l *Logger) Log(action Action, fields ...any) {
 	l.log.Info("audit.event", args...)
 }
 
-// redactFields 对字段列表中的字符串值打码（键不处理，保持可检索）。
+// redactFields 对字段列表打码（键不处理，保持可检索）：字符串值过 Redact
+// 文本规则；非字符串值交 logredact.RedactValue 递归下探——map/slice/struct
+// 容器逐层拷贝，字符串叶子过同一套文本规则，凭证词键（authorization/
+// password/token…）整值打码，普通值保留。输出为副本，入参不动。
 func redactFields(fields []any) []any {
 	if len(fields) == 0 {
 		return fields
@@ -46,7 +51,7 @@ func redactFields(fields []any) []any {
 			out[i] = logredact.Redact(s)
 			continue
 		}
-		out[i] = f
+		out[i] = logredact.RedactValue(f)
 	}
 	return out
 }
