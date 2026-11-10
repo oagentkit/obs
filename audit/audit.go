@@ -4,6 +4,7 @@ package audit
 
 import (
 	"encoding/json"
+	"unicode/utf8"
 
 	"github.com/oagentkit/guardx/logredact"
 	"github.com/oekit/logx"
@@ -54,7 +55,8 @@ func (l *Logger) Log(action Action, fields ...any) {
 //     克隆 URL 内嵌 token / 连接串原文落盘。
 //   - 其余值交 logredact.RedactValue 递归下探：map/slice/struct 容器逐层
 //     拷贝，字符串叶子过同一套文本规则，凭证词键（authorization/password/
-//     token…）整值打码，普通值保留。
+//     token…）整值打码，普通值保留。嵌套层里的 []byte 与 error 叶子同语义
+//     （obs#88：guardx redactReflect 单点收口，需 guardx v0.24.3+ 地板）。
 //
 // 键感知（obs#83）：fields 是 logx 风格的交替 kv 序列，值位打码必须参考
 // **同对的键名**——此前逐元素处理只看值类型：顶层平铺的 `"password",
@@ -130,12 +132,24 @@ func redactValueField(f any) any {
 	case string:
 		return logredact.Redact(v)
 	case json.RawMessage:
+		// nil 短路（obs#87）：RedactJSON(nil) 产出空非 nil 切片，重铸回
+		// RawMessage 后 MarshalJSON 从 "null" 变空字节——slog JSON 渲染炸
+		// unexpected end of JSON input。空 body 请求以 RawMessage(nil) 入
+		// 审计是常态。
+		if v == nil {
+			return v
+		}
 		return json.RawMessage(logredact.RedactJSON(v))
 	case []byte:
-		if json.Valid(v) {
-			return logredact.RedactJSON(v)
+		// 非 JSON 分支收窄（obs#89）：#76 的豁免条款是「非 JSON 二进制」，
+		// json.Valid 预检把非 JSON 一切（UTF-8 文本：PEM/表单体/token 串）
+		// 都豁免了——base64 可逆落盘，同一载荷换承载类型即绕开打码。收口：
+		// UTF-8（JSON→键感知 / 非 JSON→RedactJSON 自带文本回落）；
+		// 非 UTF-8 才是真二进制、检测面为空、原样。
+		if !utf8.Valid(v) {
+			return v
 		}
-		return v
+		return logredact.RedactJSON(v)
 	case error:
 		return logredact.Redact(v.Error())
 	default:
