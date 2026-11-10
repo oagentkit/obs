@@ -2,6 +2,38 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.16] — 2026-11-11
+
+### 修复(audit)：顶层 kv 对键感知打码（#83）
+
+redactFields 从逐元素处理改为 kv 对处理：值位打码参考同对键名——顶层平铺的
+"password", "P@ssw0rd-2026" 此前原文落盘（只看值类型、键名从不参与判定），
+同一凭证嵌一层 map 反而打码，守卫依赖载荷形态而非字段语义。kv 值经单键 map
+走 RedactValue 键名判定单源（凭证词表/复合键/复数形态全在 logredact 内部，
+哨兵探测，不复制词表）；JSON 文本/字节/error 三类载体不能整体走 walk
+（[]byte 被当二进制原样、RawMessage 丢 JSON 路径），凭证键命中时整值打码、
+未命中走各自类型化路径（RedactJSON/原样/err 文本）。奇数长度尾元素走值位
+兜底，非凭证值行为不变。
+Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
+
+- 杂务(deps)：依赖地板追到最新——github.com/oekit/concurrency v0.32.0
+
+| 依赖 | 现地板 | 抬到 |
+|---|---|---|
+| `github.com/oekit/concurrency` | `v0.31.2` | `v0.32.0` |
+| `github.com/oekit/logx` | `v0.9.1` | `v0.9.2` |
+| `github.com/oekit/pkg` | `v0.41.1` | `v0.42.0` |
+## 为什么
+矩阵的**发版时刻地板时效**门禁（`verify_tag_floor --ref HEAD`）要求：各仓 HEAD
+（= 下次发版会发出去的内容）的依赖地板，相对那一刻的依赖最新版本，不能已落后。
+oekit 基座与矩阵模块都在高频发版 ⇒ 地板是**跑步机**，落后一格就会判红。
+## 兼容性实测
+本工具在提交前跑完 `go build` / `go vet` / `go test -race -count=1 ./...`（全绿才提交）
+与 `go mod tidy -diff`（无漂移）⇒ 改动**只影响依赖版本**，零行为差异。
+只改 `go.mod` / `go.sum` ⇒ 不需要 CHANGELOG 条目（版本段由下次发版的 `prewrite` 生成）。
+Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
+
+
 ## [v0.9.15] — 2026-11-10
 
 ### 修复(audit)：redactFields 补齐字节载荷与 error 值的打码形态（#76 #77）
@@ -153,22 +185,6 @@ pkg v0.38.0（minor 新增，无 API 变更）落地，发版时刻地板时效�
 
 
 ## [v0.9.11] — 2026-11-08
-
-- 杂务(deps)：依赖地板追到最新——github.com/oekit/concurrency v0.28.4
-
-| 依赖 | 现地板 | 抬到 |
-|---|---|---|
-| `github.com/oekit/concurrency` | `v0.28.3` | `v0.28.4` |
-| `github.com/oekit/logx` | `v0.8.8` | `v0.8.10` |
-| `github.com/oekit/pkg` | `v0.37.3` | `v0.37.4` |
-## 为什么
-矩阵的**发版时刻地板时效**门禁（`verify_tag_floor --ref HEAD`）要求：各仓 HEAD
-（= 下次发版会发出去的内容）的依赖地板，相对那一刻的依赖最新版本，不能已落后。
-oekit 基座与矩阵模块都在高频发版 ⇒ 地板是**跑步机**，落后一格就会判红。
-## 兼容性实测
-本工具在提交前跑完 `go build` / `go vet` / `go test -race -count=1 ./...`（全绿才提交）
-与 `go mod tidy -diff`（无漂移）⇒ 改动**只影响依赖版本**，零行为差异。
-只改 `go.mod` / `go.sum` ⇒ 不需要 CHANGELOG 条目（版本段由下次发版的 `prewrite` 生成）。
 
 - 杂务(deps)：依赖地板追平 oekit BOM v0.2.9——pkg v0.37.4 / logx v0.8.10 / concurrency v0.28.4
 
@@ -385,17 +401,6 @@ oekit 基座发了新版本（pkg v0.31.0 / concurrency v0.23.0 / logx v0.8.0）
 - github.com/oekit/pkg v0.28.0 → v0.28.0
 对应 issue matrix-tools#143。
 
-
-- 文档(obs)：刷正 README.md 的依赖清单——去掉已迁出的 textx
-
-本仓 go.mod 的矩阵内**直接**依赖只有 guardx；textx 随
-019c02998009e5d3a907ae90c070e3f23a6bf347（refactor!: obsx 迁出本仓）
-一起移出。本 README 第 22 行已经记录了那次迁移（eino 耦合的观测适配层
-迁往 llm 仓），但上一行的依赖清单漏改了。
-同仓 AGENTS.md:19 的同一行本来就只列 guardx —— 此前是**同一仓的两个
-第一入口互相矛盾**（README 说依赖 textx，AGENTS.md 说只依赖 guardx）。
-清单口径 = go.mod 的「直接」矩阵内依赖（// indirect 不列）。
-关联 oagentkit/matrix-tools#127
 
 - 文档(obs)：刷正 README 的矩阵内依赖清单 —— 与 go.mod 实测对账
 
