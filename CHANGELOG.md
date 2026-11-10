@@ -16,6 +16,10 @@ redactFields 从逐元素处理改为 kv 对处理：值位打码参考同对键
 兜底，非凭证值行为不变。
 Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
 
+- 杂务(deps)：依赖地板追到最新——guardx v0.24.2 / textx v0.10.8 / runtime v0.12.7（2026-11-11 列车）
+
+Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
+
 - 杂务(deps)：依赖地板追到最新——github.com/oekit/concurrency v0.33.0
 
 | 依赖 | 现地板 | 抬到 |
