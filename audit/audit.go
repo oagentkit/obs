@@ -55,28 +55,90 @@ func (l *Logger) Log(action Action, fields ...any) {
 //   - 其余值交 logredact.RedactValue 递归下探：map/slice/struct 容器逐层
 //     拷贝，字符串叶子过同一套文本规则，凭证词键（authorization/password/
 //     token…）整值打码，普通值保留。
+//
+// 键感知（obs#83）：fields 是 logx 风格的交替 kv 序列，值位打码必须参考
+// **同对的键名**——此前逐元素处理只看值类型：顶层平铺的 `"password",
+// "P@ssw0rd-2026"` 原文落盘，同一凭证嵌一层 map（"payload", map{password…}）
+// 反而打码——守卫依赖载荷形态而非字段语义，包头承诺「字段值统一经 logredact
+// 打码」在最自然的调用形态上落空。kv 对的值经单键 map 走 RedactValue 的键名
+// 判定单源（凭证词表/复合键/复数形态全在 logredact 内部，本包不复制）。
+// JSON 文本/字节/error 三类载体不能整体走 walk（[]byte 被当二进制原样、
+// RawMessage 丢 JSON 路径），凭证键命中时整值打码、未命中走各自类型化路径。
 func redactFields(fields []any) []any {
 	if len(fields) == 0 {
 		return fields
 	}
 	out := make([]any, len(fields))
-	for i, f := range fields {
-		switch v := f.(type) {
-		case string:
-			out[i] = logredact.Redact(v)
-		case json.RawMessage:
-			out[i] = json.RawMessage(logredact.RedactJSON(v))
-		case []byte:
-			if json.Valid(v) {
-				out[i] = logredact.RedactJSON(v)
-				continue
+	for i := 0; i < len(fields); i += 2 {
+		// 尾部悬挂元素（奇数长度）：没有配对键，按值位兜底路径处理。
+		if i+1 >= len(fields) {
+			out[i] = redactValueField(fields[i])
+			break
+		}
+		out[i] = fields[i] // 键不处理，保持可检索
+		key, isKey := fields[i].(string)
+		if !isKey {
+			out[i+1] = redactValueField(fields[i+1])
+			continue
+		}
+		switch fields[i+1].(type) {
+		case json.RawMessage, []byte, error:
+			// 特殊载体：凭证键命中即整值打码（掩码标记与嵌套形态同一份），
+			// 未命中走各自的类型化路径（RedactJSON / 原样 / err 文本）。
+			if masked, ok := credentialValueMask(key); ok {
+				out[i+1] = masked
+			} else {
+				out[i+1] = redactValueField(fields[i+1])
 			}
-			out[i] = v
-		case error:
-			out[i] = logredact.Redact(v.Error())
 		default:
-			out[i] = logredact.RedactValue(f)
+			// 常规值：单键 map 走 RedactValue 键名判定——凭证词键整值打码；
+			// 非凭证键的输出与旧路径等价（string→RedactWith、容器→递归下探）。
+			if m, ok := logredact.RedactValue(map[string]any{key: fields[i+1]}).(map[string]any); ok {
+				if mv, present := m[key]; present {
+					out[i+1] = mv
+					continue
+				}
+			}
+			out[i+1] = redactValueField(fields[i+1])
 		}
 	}
 	return out
+}
+
+// credentialValueMask 键名是否命中 logredact 的凭证词表（哨兵探测）：词表与
+// 复合键/复数形态判定都在 logredact 内部（未导出），经公开 API RedactValue
+// 用哨兵值探测——凭证词键整值打码（哨兵被替换）、普通键原样透传（文本规则
+// 不命中哨兵串）。审计不是热路径，每次探测一次单键 map 分配可接受。
+func credentialValueMask(key string) (any, bool) {
+	const sentinel = "audit-sentinel-value"
+	m, ok := logredact.RedactValue(map[string]any{key: sentinel}).(map[string]any)
+	if !ok {
+		return nil, false
+	}
+	if v, present := m[key]; present && v != sentinel {
+		return v, true
+	}
+	return nil, false
+}
+
+// redactValueField 单值位的形态开关（无键可依的兜底路径——奇数长度尾元素、
+// 非字符串键位的值）：string 过 Redact 文本规则；JSON 文本的字节载荷交
+// RedactJSON（obs#76）；error 先取文本再过 Redact（obs#77）；其余交
+// RedactValue 递归下探。
+func redactValueField(f any) any {
+	switch v := f.(type) {
+	case string:
+		return logredact.Redact(v)
+	case json.RawMessage:
+		return json.RawMessage(logredact.RedactJSON(v))
+	case []byte:
+		if json.Valid(v) {
+			return logredact.RedactJSON(v)
+		}
+		return v
+	case error:
+		return logredact.Redact(v.Error())
+	default:
+		return logredact.RedactValue(f)
+	}
 }
