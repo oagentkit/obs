@@ -2,6 +2,19 @@
 
 > 本文件由 `matrix-tools/scripts/gen_changelogs.py` 从 git 历史生成，按 tag 切段、取每段内的 conventional commit 渲染。
 
+## [v0.9.17] — 2026-11-11
+
+### 修复(audit)：nil RawMessage 保型 + []byte 非 JSON 文本纳入打码（#87 #89）
+
+- #87 redactValueField 的 RawMessage 分支补 nil 短路——RedactJSON(nil) 产出
+  空非 nil 切片，重铸后 MarshalJSON 从 null 变空字节（slog 渲染炸）；空 body
+  请求以 RawMessage(nil) 入审计是常态
+- #89 []byte 分支收窄：json.Valid 预检把非 JSON 一切都豁免（PEM/表单体/
+  token 串 base64 可逆落盘，与 RawMessage 分支自相矛盾）——收口为 UTF-8 判定
+  （JSON→键感知 / 非 JSON→RedactJSON 自带文本回落），非 UTF-8 真二进制才原样
+- 嵌套层同语义（#88）由 guardx redactReflect 单点收口（v0.24.3+ 地板）
+Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
+
 ## [v0.9.16] — 2026-11-11
 
 ### 修复(audit)：顶层 kv 对键感知打码（#83）
