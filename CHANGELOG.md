@@ -15,6 +15,10 @@
 - 嵌套层同语义（#88）由 guardx redactReflect 单点收口（v0.24.3+ 地板）
 Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
 
+- 杂务(deps)：依赖地板追到最新——guardx v0.24.3 / textx v0.10.9
+
+Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
+
 - 杂务(deps)：依赖地板追到最新——github.com/oekit/pkg v0.44.0
 
 Co-authored-by: Murphy-Yi <zhangyi@Murphy-YideMac-Mini.local>
