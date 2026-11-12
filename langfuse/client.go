@@ -95,7 +95,8 @@ func (c *Client) FetchBatch(ctx context.Context, q Query) (Batch, error) {
 
 	// 两段式（第十轮重构落地）：先翻页收齐轻量列表（可整段重试，失败=致命），
 	// 再逐条详情（单条失败降级跳过计数——列表取回后 trace 被删的 404 不再
-	// 弃掉整批已合并详情）。seen 去重：删除/补录旧时间戳 trace 会使后续页
+	// 弃掉整批已合并详情；**但整体 ctx 取消/超时例外**，与列表阶段同口径
+	// 上抛，obs#105）。seen 去重：删除/补录旧时间戳 trace 会使后续页
 	// 整体位移，跨页 ID 去重兜底。
 	type row struct {
 		id   string
@@ -135,6 +136,14 @@ func (c *Client) FetchBatch(ctx context.Context, q Query) (Batch, error) {
 	})
 	failedIdx := map[int]bool{}
 	if derr != nil {
+		// 整体取消/超时先判别（obs#105）：ctx 取消不是「单条失败降级」那一档
+		// ——降级档的适用范围写得很窄（trace 被删的 404 这类单条失败），把
+		// 整体取消并进去会返回 err==nil 的空批次，调用方无从分辨「trace 被删
+		// 了」与「我被取消了」。与列表阶段同口径上抛。fanout.Error.Unwrap 支持
+		// 多错误穿透（Go 1.20+），errors.Is 能从任意失败项里判出 ctx 错误。
+		if errors.Is(derr, context.Canceled) || errors.Is(derr, context.DeadlineExceeded) {
+			return batch, derr
+		}
 		var fe *fanout.Error
 		if errors.As(derr, &fe) {
 			batch.Skipped = len(fe.Failed) // 单条详情失败：降级跳过计数，不弃整批
