@@ -141,7 +141,14 @@ func (c *Client) FetchBatch(ctx context.Context, q Query) (Batch, error) {
 		// 整体取消并进去会返回 err==nil 的空批次，调用方无从分辨「trace 被删
 		// 了」与「我被取消了」。与列表阶段同口径上抛。fanout.Error.Unwrap 支持
 		// 多错误穿透（Go 1.20+），errors.Is 能从任意失败项里判出 ctx 错误。
-		if errors.Is(derr, context.Canceled) || errors.Is(derr, context.DeadlineExceeded) {
+		//
+		// 但 errors.Is 单独用不够（obs#111）：net/http client 自身 Timeout
+		// 的 timeoutError.Is 认 context.DeadlineExceeded——30s client 超时与
+		// 「整体 ctx 超时」在 errors.Is 下不可分，单条慢 trace 会把整批判成
+		// 整体超时上抛（本应 49 成功 + 1 Skipped）。收口：还须调用方 ctx
+		// **真的已死**（ctx.Err() != nil）——client 超时发生时调用方 ctx 往往
+		// 还活着，这正是可用的判别信号。ctx 活着 ⇒ 非整体超时 ⇒ 单条降级档。
+		if ctx.Err() != nil && (errors.Is(derr, context.Canceled) || errors.Is(derr, context.DeadlineExceeded)) {
 			return batch, derr
 		}
 		var fe *fanout.Error
