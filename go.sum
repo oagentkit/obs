@@ -1,5 +1,5 @@
-github.com/oagentkit/guardx v0.24.6 h1:bLjJ5N0DNZepRH6fA3b7dDB7p8E2btZI4FbL8TEBAG4=
-github.com/oagentkit/guardx v0.24.6/go.mod h1:F/GJtLXkCXBXjgwKkgzt4C3FBvaFgSHpIuREYo1MTLw=
+github.com/oagentkit/guardx v0.25.0 h1:z3JNz4py5nZTu6wMLnMYzZV15gPG9zOMRJh9pGBGU98=
+github.com/oagentkit/guardx v0.25.0/go.mod h1:+l42QXyyFusJhazgbnULrNxbDIjeVJxN4+annwoIC0c=
 github.com/oekit/concurrency v0.35.1 h1:v1uOyBmXSw0JOiN4KqO8Cou108Q60XPUmce0aKF/JoE=
 github.com/oekit/concurrency v0.35.1/go.mod h1:zRGaMlEExLlCyBgLMQUc6eE12hDZo5HwU1aOtS4sP1U=
 github.com/oekit/logx v0.10.0 h1:swoa1h9oLMdoH6LVjHaTYFIlVSxwRlfV0lBMNmKFfLI=
