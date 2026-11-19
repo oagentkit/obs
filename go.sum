@@ -1,8 +1,8 @@
 github.com/oagentkit/guardx v0.28.0 h1:+7aKnaJ4HqZLqSMd5QfgI5bTbWy3QYpgPQ1tkIpysQs=
 github.com/oagentkit/guardx v0.28.0/go.mod h1:OzgOOEn1E7MsoRhtywx2d9WhzEYxzK/o2px+EpBXnUg=
-github.com/oekit/concurrency v0.38.1 h1:eGJt9IVc7J3FYN5nNx7OQz1D7Cpm7JtJ+xjIt5Chezw=
-github.com/oekit/concurrency v0.38.1/go.mod h1:aT/K82YRzEviyd1JRLBvrEGDVpqG3uUqCdol+ZlEHo8=
-github.com/oekit/logx v0.11.0 h1:dlDDIqs04ibDJ7HJg1O0gd/gXUbirFc4WPHgjQV5N/w=
-github.com/oekit/logx v0.11.0/go.mod h1:aIxiaegg9jzyvXhGXNcjq7ljAdVC2ERUCHqGN+thui0=
-github.com/oekit/pkg v0.52.0 h1:xh8dtda3oJ83y49yl49VpTYvpyeSVGKlVQswBmVYWms=
-github.com/oekit/pkg v0.52.0/go.mod h1:Cr6sJpBX2a0gAIgLa32+NY69h/UZtuN6L1ZdXtP9upo=
+github.com/oekit/concurrency v0.39.1 h1:FltEJ9wpWgY0rCv+DOvgCWWbEqEON3VzF+hzfFkTFD0=
+github.com/oekit/concurrency v0.39.1/go.mod h1:jKGzLDddMiGX+h+oUx9flZ5chQLRdEx39OW6WICyObI=
+github.com/oekit/logx v0.12.0 h1:N0EEDHK83jw9w9m5C2zQxRVSB2ifvR/nqyrOmcUrX/o=
+github.com/oekit/logx v0.12.0/go.mod h1:aIxiaegg9jzyvXhGXNcjq7ljAdVC2ERUCHqGN+thui0=
+github.com/oekit/pkg v0.55.0 h1:BLn36jbqbNh8iotWSc3op4FpFaxisQohVRYEB7Ve5zA=
+github.com/oekit/pkg v0.55.0/go.mod h1:Cr6sJpBX2a0gAIgLa32+NY69h/UZtuN6L1ZdXtP9upo=
