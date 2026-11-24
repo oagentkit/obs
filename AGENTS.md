@@ -1,15 +1,22 @@
 # AGENTS.md — oagentkit/obs
 
-> 观测客户端 + 审计留痕——Langfuse 追踪客户端 / 敏感操作结构化审计
+> 敏感操作的结构化审计留痕——字段值统一经 guardx/logredact 打码
 > module：`github.com/oagentkit/obs` · org：[oagentkit = Open Agent Kit](https://github.com/oagentkit)
 > 矩阵分层：**tier 2**（集成层，依赖 tier0/tier1 + 重第三方地板）
 
 ## 本仓包含
 
 ```
-`langfuse/`
 `audit/`      ← 自 guardx 迁入（v0.8.0）：审计留痕，依赖 oekit/logx
 ```
+
+> **本仓已降为 `audit` 单包仓。** 原 `langfuse` 包（Langfuse Public API 只读客户端）
+> 已迁往 `github.com/oagentkit/llm/obsx`（读写同域）⇒ **breaking**：
+> `github.com/oagentkit/obs/langfuse` 的导出面整体迁走，符号名逐字未变，
+> 调用方**只改 import 行**即可。
+>
+> ⚠️ **不要在本仓留转发到 `llm/obsx` 的兼容壳**：矩阵里 `obs` 与 `llm` 同为
+> tier 2 ⇒ `obs` 不得依赖 `llm` ⇒ 兼容壳本身就是违规的同层依赖。
 
 ## 硬规则
 
@@ -69,8 +76,11 @@ tag 必须落在 CHANGELOG 提交**之后** —— 下游 `go get` 拿到的是 
 
 ### 与 oekit 的边界
 
-本仓是**矩阵里唯一直接做 eino callbacks 适配**的仓 —— oekit 作为微服务工具链不会做 LLM 场景。
-`oekit/tracing`（3 个导出）提供 Provider，本仓提供「把 LLM 调用挂上去」的适配层。两者互补，不重叠。
+本仓提供**执行面留痕**（audit），不做 LLM 场景适配 ——
+oekit 作为微服务工具链不会做 LLM 场景。
+「把 LLM 调用挂到 OTel 上」那一层在 `github.com/oagentkit/llm/obsx`
+（`otelgen.go` 的 generation span 发射端 + `langfuse_read.go` 的只读客户端）。
+`oekit/tracing`（3 个导出）提供 Provider，两者互补，不重叠。
 
 ## 明确不属于本仓的
 
@@ -78,7 +88,8 @@ tag 必须落在 CHANGELOG 提交**之后** —— 下游 `go get` 拿到的是 
 |---|---|
 | 文本/差异/会话/报告 | `github.com/oagentkit/textx` |
 | 事件总线/流控/子进程/热插拔/钩子 | `github.com/oagentkit/runtime` |
-| 脱敏/出口围栏/权限/沙箱解析/审计 | `github.com/oagentkit/guardx` |
+| 脱敏/出口围栏/权限/沙箱解析 | `github.com/oagentkit/guardx` |
+| LLM 调用追踪 / token 用量 / Langfuse 读写 | `github.com/oagentkit/llm`（`obsx`） |
 | DB 队列与选主 | `github.com/oagentkit/queue` |
 | 通用 errors/stringx/encoding/mathx | `github.com/oekit/pkg` |
 | goroutine 池/单飞/重试/令牌桶 | `github.com/oekit/concurrency` |
