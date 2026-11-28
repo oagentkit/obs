@@ -14,7 +14,7 @@ go get github.com/oagentkit/obs
 > 已迁往 `github.com/oagentkit/llm/obsx` —— **读写同域**（写端本来就在 llm 仓的
 > `obsx`：`otelgen.go` 的 OTel generation span 出口）⇒ **breaking**，见下方迁移须知。
 
-## 下游迁移须知（breaking）
+## 下游迁移对照与须知（breaking）
 
 `obs/langfuse` 的**导出面整体迁走**（原包的 6 个导出符号全部在 llm 侧同名承接）：
 

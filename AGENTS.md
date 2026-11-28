@@ -11,7 +11,7 @@
 ```
 
 > **本仓已降为 `audit` 单包仓。** 原 `langfuse` 包（Langfuse Public API 只读客户端）
-> 已迁往 `github.com/oagentkit/llm/obsx`（读写同域）⇒ **breaking**：
+> 已迁至 `github.com/oagentkit/llm/obsx`（读写同域）⇒ **breaking**：
 > `github.com/oagentkit/obs/langfuse` 的导出面整体迁走，符号名逐字未变，
 > 调用方**只改 import 行**即可。
 >
